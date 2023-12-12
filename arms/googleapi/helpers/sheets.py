@@ -95,7 +95,6 @@ class SpreadsheetsHelper:
             **config.get("properties", {}),
             "title": title,
         }
-        # spreadsheet_config = {'properties': {'title': <title>}}
         spreadsheet_config: dict[str, Any] = {
             **(config or {}),
             "properties": properties,
