@@ -9,7 +9,6 @@ from aiofiles.tempfile import TemporaryDirectory
 from .api import ConfluenceToolkit
 from .exc import ClientError
 from .models.ancestor import Ancestor, AncestorType
-from .models.attachment import AttachmentsResponse
 from .models.errors import ErrorCode, ErrorResponse
 from .models.page import (
     GetPageParams,
@@ -92,7 +91,7 @@ class TransferHelper:
                     filename=att.title,
                 )
                 tasks.append(task)
-            responses: list[AttachmentsResponse] = await asyncio.gather(*tasks)
+            responses = await asyncio.gather(*tasks)
             mp_att: dict[UUID, PatchMappingValue] = {
                 att_req.extensions.fileId: {
                     "image_id": str(att_resp.first.extensions.fileId),

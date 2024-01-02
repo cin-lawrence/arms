@@ -212,11 +212,13 @@ class ConfluenceToolkit:
             Path(parent_folder).mkdir(parents=True, exist_ok=True)
 
         tasks = [
-            self.download_file(
-                str(attachment.uLinks.download),
-                file_id=attachment.extensions.fileId,
-                media_type=attachment.extensions.mediaType,
-                parent_folder=parent_folder,
+            asyncio.create_task(
+                self.download_file(
+                    str(attachment.uLinks.download),
+                    file_id=attachment.extensions.fileId,
+                    media_type=attachment.extensions.mediaType,
+                    parent_folder=parent_folder,
+                )
             )
             for attachment in valid_attachments
             if attachment.uLinks.download
