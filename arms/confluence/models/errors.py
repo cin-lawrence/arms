@@ -1,4 +1,5 @@
 from enum import StrEnum
+from typing import Union
 
 from pydantic import BaseModel, ValidationError
 
@@ -18,7 +19,7 @@ class ErrorResponse(BaseModel):
     errors: list[Error]
 
     @classmethod
-    def try_validate_json(cls, text: str) -> "ErrorResponse" | str:
+    def try_validate_json(cls, text: str) -> Union["ErrorResponse", str]:
         try:
             return cls.model_validate_json(text)
         except ValidationError:
