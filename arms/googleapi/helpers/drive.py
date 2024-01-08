@@ -2,7 +2,10 @@ from functools import cached_property
 
 from googleapiclient.discovery import Resource
 
-from ..payloads.drive import PermisionsCreateRequest, PermissionsCreateResponse
+from ..payloads.drive import (
+    PermissionsCreateRequest,
+    PermissionsCreateResponse,
+)
 from .factory import GoogleServiceFactory, default_google_service_factory
 
 
@@ -18,7 +21,7 @@ class DriveHelper:
     def grant_permissions(
         self,
         res_id: str,
-        perm_obj: PermisionsCreateRequest,
+        perm_obj: PermissionsCreateRequest,
     ) -> PermissionsCreateResponse:
         return (
             self.service.permissions()
