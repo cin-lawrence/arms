@@ -18,7 +18,7 @@ class PermissionsRoles(StrEnum):
     Reader = "reader"
 
 
-class PermisionsCreateRequest(TypedDict):
+class PermissionsCreateRequest(TypedDict):
     type: PermissionsTypes
     role: PermissionsRoles
     emailAddress: str
