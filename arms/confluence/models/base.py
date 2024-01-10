@@ -48,7 +48,7 @@ class DumpByConfigMixin(BaseModel):
 
 
 class _ULinks(DumpByConfigMixin, BaseModel):
-    _DumpConfig = DumpConfig(exclude_none=True)
+    _DumpConfig = DumpConfig(exclude_none=True, by_alias=True)
 
     self: Link | None = None
     base: Link | None = None
@@ -72,7 +72,9 @@ class _BaseUnitPartial(DumpByConfigMixin, BaseModel, Generic[ExpandableType]):
     uExpandable: Annotated[
         ExpandableType | None, Field(alias="_expandable")
     ] = None
-    uLinks: ULinks | None = None
+    uLinks: Annotated[_ULinks | None, Field(alias="_links")] = None
+    # specifying model as below won't work :sad:
+    # uLinks: _ULinks | None = None
 
 
 class BaseUnit(_BaseUnitPartial[ExpandableType], Generic[ExpandableType]):

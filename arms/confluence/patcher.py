@@ -51,9 +51,9 @@ class MediaSingleSlice(Slice):
 
 class Image(BaseModel):
     id: UUID
-    width: int | None
-    height: int | None
-    caption: str | None
+    width: int | None = None
+    height: int | None = None
+    caption: str | None = None
     collection: Annotated[
         str,
         Field(description="should starts with `contentId-`"),
@@ -126,6 +126,14 @@ def patch(
                 patchobj[key]
             except (IndexError, KeyError):
                 patchobj[key] = deepcopy(obj[key])
+
+            patch(
+                obj[key],
+                patchobj[key],
+                mp_att,
+                level=level + 1,
+                path=f"{path} > {key}",
+            )
     elif isinstance(obj, dict):
         obj_dict = obj
         for key in obj_dict:
@@ -136,9 +144,11 @@ def patch(
 
             if obj_dict.get("type") == "mediaSingle":
                 media_slice = MediaSingleSlice.model_validate(obj)
-                original_image_id = (media_slice.content_attrs or {}).get("id")
+                original_image_id = UUID(
+                    (media_slice.content_attrs or {}).get("id")
+                )
                 if original_image_id in mp_att:
-                    value = mp_att[cast(UUID, original_image_id)]
+                    value = mp_att[original_image_id]
                     altered = alter_media_single(
                         media_slice,
                         UUID(value["image_id"]),
@@ -147,11 +157,11 @@ def patch(
                     patchobj["content"] = altered["content"]
                 continue
 
-        patch(
-            obj[key],
-            patchobj[key],
-            mp_att,
-            level=level + 1,
-            path=f"{path} > {key}",
-        )
+            patch(
+                obj[key],
+                patchobj[key],
+                mp_att,
+                level=level + 1,
+                path=f"{path} > {key}",
+            )
     return patchobj
