@@ -1,14 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import (
-    Annotated,
-    Any,
-    Callable,
-    TypeAlias,
-    TypedDict,
-    TypeVar,
-    cast,
-)
+from typing import Annotated, Any, Callable, TypeAlias, TypedDict, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -144,11 +136,12 @@ def patch(
 
             if obj_dict.get("type") == "mediaSingle":
                 media_slice = MediaSingleSlice.model_validate(obj)
-                original_image_id = UUID(
-                    (media_slice.content_attrs or {}).get("id")
-                )
-                if original_image_id in mp_att:
-                    value = mp_att[original_image_id]
+                original_image_id = (media_slice.content_attrs or {}).get("id")
+                if not isinstance(original_image_id, str):
+                    continue
+                original_image_uuid = UUID(original_image_id)
+                if original_image_uuid in mp_att:
+                    value = mp_att[original_image_uuid]
                     altered = alter_media_single(
                         media_slice,
                         UUID(value["image_id"]),
