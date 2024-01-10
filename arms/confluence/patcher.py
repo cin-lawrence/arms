@@ -1,14 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import (
-    Annotated,
-    Any,
-    Callable,
-    TypeAlias,
-    TypedDict,
-    TypeVar,
-    cast,
-)
+from typing import Annotated, Any, Callable, TypeAlias, TypedDict, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -126,6 +118,14 @@ def patch(
                 patchobj[key]
             except (IndexError, KeyError):
                 patchobj[key] = deepcopy(obj[key])
+
+            patch(
+                obj[key],
+                patchobj[key],
+                mp_att,
+                level=level + 1,
+                path=f"{path} > {key}",
+            )
     elif isinstance(obj, dict):
         obj_dict = obj
         for key in obj_dict:
@@ -137,8 +137,11 @@ def patch(
             if obj_dict.get("type") == "mediaSingle":
                 media_slice = MediaSingleSlice.model_validate(obj)
                 original_image_id = (media_slice.content_attrs or {}).get("id")
-                if original_image_id in mp_att:
-                    value = mp_att[cast(UUID, original_image_id)]
+                if not isinstance(original_image_id, str):
+                    continue
+                original_image_uuid = UUID(original_image_id)
+                if original_image_uuid in mp_att:
+                    value = mp_att[original_image_uuid]
                     altered = alter_media_single(
                         media_slice,
                         UUID(value["image_id"]),
@@ -147,11 +150,11 @@ def patch(
                     patchobj["content"] = altered["content"]
                 continue
 
-        patch(
-            obj[key],
-            patchobj[key],
-            mp_att,
-            level=level + 1,
-            path=f"{path} > {key}",
-        )
+            patch(
+                obj[key],
+                patchobj[key],
+                mp_att,
+                level=level + 1,
+                path=f"{path} > {key}",
+            )
     return patchobj

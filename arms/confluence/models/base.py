@@ -64,6 +64,14 @@ class _ULinks(DumpByConfigMixin, BaseModel):
 UExpandable = Annotated[ExpandableType, Field(alias="_expandable")]
 ULinks = Annotated[_ULinks, Field(alias="_links")]
 
+"""Specifying uLinks in BaseUnit would fail if annotating like below:
+    ```
+        uLinks: ULinks | None = None
+    ```
+    however, using OptionalULinks a.k.a moving None inside the Annotated worked
+"""
+OptionalULinks = Annotated[_ULinks | None, Field(alias="_links")]
+
 
 class _BaseUnitPartial(DumpByConfigMixin, BaseModel, Generic[ExpandableType]):
     _DumpConfig = DumpConfig(by_alias=True)
@@ -72,7 +80,7 @@ class _BaseUnitPartial(DumpByConfigMixin, BaseModel, Generic[ExpandableType]):
     uExpandable: Annotated[
         ExpandableType | None, Field(alias="_expandable")
     ] = None
-    uLinks: ULinks | None = None
+    uLinks: OptionalULinks = None
 
 
 class BaseUnit(_BaseUnitPartial[ExpandableType], Generic[ExpandableType]):

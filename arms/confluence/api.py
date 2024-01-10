@@ -4,7 +4,7 @@ import logging
 from enum import StrEnum
 from mimetypes import guess_extension, guess_type
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 import aiofiles
@@ -22,6 +22,7 @@ from .models.attachment import (
     AttachmentCreateResponse,
     AttachmentsResponse,
 )
+from .models.base import ULinks
 from .models.page import (
     GetPageParams,
     PageBodyFormat,
@@ -205,7 +206,10 @@ class ConfluenceToolkit:
             return
 
         valid_attachments = filter(
-            lambda att: att.uLinks.download, attachments
+            lambda att: (
+                att.uLinks is not None and att.uLinks.download is not None
+            ),
+            attachments,
         )
 
         if parent_folder:
@@ -214,14 +218,14 @@ class ConfluenceToolkit:
         tasks = [
             asyncio.create_task(
                 self.download_file(
-                    str(attachment.uLinks.download),
+                    str(cast(ULinks, attachment.uLinks).download),
                     file_id=attachment.extensions.fileId,
                     media_type=attachment.extensions.mediaType,
                     parent_folder=parent_folder,
                 )
             )
             for attachment in valid_attachments
-            if attachment.uLinks.download
+            if cast(ULinks, attachment.uLinks).download
         ]
         await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
 
