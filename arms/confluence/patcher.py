@@ -51,9 +51,9 @@ class MediaSingleSlice(Slice):
 
 class Image(BaseModel):
     id: UUID
-    width: int | None
-    height: int | None
-    caption: str | None
+    width: int | None = None
+    height: int | None = None
+    caption: str | None = None
     collection: Annotated[
         str,
         Field(description="should starts with `contentId-`"),

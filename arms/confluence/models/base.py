@@ -90,7 +90,7 @@ class ResourceCreateResponse(
         list[ResourceType],
         Field(description="often has only 1"),
     ] = []
-    size: int | None
+    size: int | None = None
     uLinks: ULinks | None = None
 
     @property
@@ -102,5 +102,5 @@ class ManyResourceResponse(
     ResourceCreateResponse[ResourceType],
     Generic[ResourceType],
 ):
-    start: int | None
-    limit: int | None
+    start: int | None = None
+    limit: int | None = None
