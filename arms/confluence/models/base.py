@@ -48,7 +48,7 @@ class DumpByConfigMixin(BaseModel):
 
 
 class _ULinks(DumpByConfigMixin, BaseModel):
-    _DumpConfig = DumpConfig(exclude_none=True, by_alias=True)
+    _DumpConfig = DumpConfig(exclude_none=True)
 
     self: Link | None = None
     base: Link | None = None
@@ -64,6 +64,14 @@ class _ULinks(DumpByConfigMixin, BaseModel):
 UExpandable = Annotated[ExpandableType, Field(alias="_expandable")]
 ULinks = Annotated[_ULinks, Field(alias="_links")]
 
+"""Specifying uLinks in BaseUnit would fail if annotating like below:
+    ```
+        uLinks: ULinks | None = None
+    ```
+    however, using OptionalULinks a.k.a moving None inside the Annotated worked
+"""
+OptionalULinks = Annotated[_ULinks | None, Field(alias="_links")]
+
 
 class _BaseUnitPartial(DumpByConfigMixin, BaseModel, Generic[ExpandableType]):
     _DumpConfig = DumpConfig(by_alias=True)
@@ -72,9 +80,7 @@ class _BaseUnitPartial(DumpByConfigMixin, BaseModel, Generic[ExpandableType]):
     uExpandable: Annotated[
         ExpandableType | None, Field(alias="_expandable")
     ] = None
-    uLinks: Annotated[_ULinks | None, Field(alias="_links")] = None
-    # specifying model as below won't work :sad:
-    # uLinks: _ULinks | None = None
+    uLinks: OptionalULinks = None
 
 
 class BaseUnit(_BaseUnitPartial[ExpandableType], Generic[ExpandableType]):
@@ -92,7 +98,7 @@ class ResourceCreateResponse(
         list[ResourceType],
         Field(description="often has only 1"),
     ] = []
-    size: int | None
+    size: int | None = None
     uLinks: ULinks | None = None
 
     @property
@@ -104,5 +110,5 @@ class ManyResourceResponse(
     ResourceCreateResponse[ResourceType],
     Generic[ResourceType],
 ):
-    start: int | None
-    limit: int | None
+    start: int | None = None
+    limit: int | None = None
