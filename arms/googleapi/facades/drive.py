@@ -1,4 +1,5 @@
 import hashlib
+import json
 import logging
 import os
 import shutil
@@ -47,7 +48,7 @@ DefaultDownloadOptions = DownloadOptions(ignore_existing=True)
 
 
 class GoogleDrive:
-    DefaultFields: str = (
+    DefaultFieldsListFolder: str = (
         "nextPageToken, " "files(kind, id, name, mimeType, size, md5CheckSum)"
     )
 
@@ -67,8 +68,30 @@ class GoogleDrive:
     def delete_file(self, file_id: str) -> str:
         return self.helper.delete_file(file_id)
 
-    def get_file_obj(self, file_id: str) -> File:
-        return self.helper.get_metadata(file_id)
+    def get_metadata(
+        self, file_id: str, fields: list[str] | None = None
+    ) -> File:
+        fields_str: str = (
+            f"nextPageToken, files({', '.join(fields)})"
+            if fields and len(fields) > 0
+            else "*"
+        )
+        return self.helper.get_metadata(file_id, fields=fields_str)
+
+    def dump_metadata(
+        self,
+        file_id: str,
+        path: Path | str,
+        fields: list[str] | None = None,
+        indent: int = 2,
+    ) -> None:
+        with open(path, "w+", encoding="utf8") as writefile:
+            json.dump(
+                self.get_metadata(file_id, fields=fields),
+                writefile,
+                indent=indent,
+                ensure_ascii=False,
+            )
 
     @staticmethod
     def is_downloadable(mimetype: str) -> bool:
@@ -87,7 +110,7 @@ class GoogleDrive:
         fields_str: str = (
             f"nextPageToken, files({', '.join(fields)})"
             if fields and len(fields) > 0
-            else self.DefaultFields
+            else self.DefaultFieldsListFolder
         )
         try:
             response = self.helper.list_folder(folder_id, fields_str, pageSize)
