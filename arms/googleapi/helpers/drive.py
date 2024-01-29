@@ -28,13 +28,13 @@ class DriveHelper:
 
     def grant_permissions(
         self,
-        res_id: str,
+        file_id: str,
         perm_obj: PermissionsCreateRequest,
     ) -> PermissionsCreateResponse:
         return (
             self.service.permissions()
             .create(
-                fileId=res_id,
+                fileId=file_id,
                 body=perm_obj,
             )
             .execute()
@@ -44,7 +44,7 @@ class DriveHelper:
         # on success, it returns an empty string
         return self.service.files().delete(fileId=file_id).execute()
 
-    def get_metadata(self, file_id: str, fields: str) -> File:
+    def get_metadata(self, file_id: str, fields: str = "*") -> File:
         return (
             self.service.files().get(fileId=file_id, fields=fields).execute()
         )

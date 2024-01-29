@@ -10,7 +10,11 @@ from typing import Annotated, Any, Literal, NotRequired, TypedDict, cast
 from googleapiclient.errors import HttpError
 
 from ..helpers.drive import DriveHelper
-from ..payloads.drive import File
+from ..payloads.drive import (
+    File,
+    PermissionsCreateRequest,
+    PermissionsCreateResponse,
+)
 from ..payloads.enums import MimeType
 
 
@@ -53,6 +57,19 @@ class GoogleDrive:
             f"{__name__}.{self.__class__.__name__}"
         )
 
+    def grant_permissions(
+        self,
+        file_id: str,
+        perm_obj: PermissionsCreateRequest,
+    ) -> PermissionsCreateResponse:
+        return self.helper.grant_permissions(file_id, perm_obj)
+
+    def delete_file(self, file_id: str) -> str:
+        return self.helper.delete_file(file_id)
+
+    def get_file_obj(self, file_id: str) -> File:
+        return self.helper.get_metadata(file_id)
+
     @staticmethod
     def is_downloadable(mimetype: str) -> bool:
         return not mimetype.startswith("application/vnd.google-apps")
@@ -88,7 +105,7 @@ class GoogleDrive:
         open(filepath, "wb").close()
 
     def get_filename_from_metadata(self, file_id: str) -> str:
-        metadata = self.helper.get_metadata(file_id, fields="*")
+        metadata = self.helper.get_metadata(file_id)
         if not metadata or not metadata.get("name"):
             raise ValueError("file name unspecified")
         return metadata["name"]
