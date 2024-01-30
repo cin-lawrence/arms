@@ -10,7 +10,7 @@ from typing import Annotated, Any, Literal, NotRequired, TypedDict, cast
 
 from googleapiclient.errors import HttpError
 
-from ..helpers.drive import DriveHelper
+from ..helpers.drive import DriveHelper, default_drive_helper
 from ..payloads.drive import (
     File,
     PermissionsCreateRequest,
@@ -49,7 +49,7 @@ DefaultDownloadOptions = DownloadOptions(ignore_existing=True)
 
 class GoogleDrive:
     DefaultFieldsListFolder: str = (
-        "nextPageToken, " "files(kind, id, name, mimeType, size, md5CheckSum)"
+        "nextPageToken, files(kind, id, name, mimeType, size, md5Checksum)"
     )
 
     def __init__(self, helper: DriveHelper):
@@ -144,15 +144,16 @@ class GoogleDrive:
             self.helper.download_file(file_id, buffer)
             filepath = path / filename
             with open(filepath, "wb") as writefile:
-                writefile.write(buffer.read())
+                writefile.write(buffer.getvalue())
 
     def download_file(
         self,
         file: File,
-        path: Path,
+        path: Path | None = None,
         options: DownloadOptions | None = None,
     ) -> None:
         size: int = int(file["size"])
+        path = path or Path()
         filename: str = file["name"]
         filepath: Path = path / filename
         options = options or DefaultDownloadOptions
@@ -164,18 +165,30 @@ class GoogleDrive:
         file_id: str = file["id"]
         src_md5: str = file["md5Checksum"]
         if filepath.is_file():
-            if options.get("ignore_existing"):
+            if options.get("ignore_existing", True):
                 return
             dst_md5 = md5(filepath)
             if dst_md5 == src_md5:
                 self.logger.info(f"file <{filename}>: MD5 match")
                 return
             self.logger.warning(
-                f"file <{filename}> corrupted or changed, downloading..."
+                f"file <{filename}> overwritten, downloading..."
             )
             return self.download_and_save_file(file_id, path, filename)
 
         return self.download_and_save_file(file_id, path, filename)
+
+    def download_file_by_id(
+        self,
+        file_id: str,
+        path: Path | None = None,
+        options: DownloadOptions | None = None,
+    ) -> None:
+        return self.download_file(
+            self.get_metadata(file_id),
+            path=path,
+            options=options,
+        )
 
     def create_folder(self, path: Path, exist_ok: bool = True) -> None:
         if not path.exists():
@@ -183,7 +196,7 @@ class GoogleDrive:
         if path.is_file():
             raise ValueError("destination is file")
         if exist_ok:
-            self.logger.warning(f"{path} already exists, skipped it")
+            self.logger.warning(f"{path} already exists, skipped creating it")
             return
 
         def handle_exc(func: Any, path: str, exc_info: Any) -> None:
@@ -220,7 +233,7 @@ class GoogleDrive:
                     options=options,
                 )
             elif self.is_downloadable(mimetype):
-                self.download_file(file, folder_path, options=options)
+                self.download_file(file, path=folder_path, options=options)
             else:
                 self.logger.warning(f"Undownloadable: {file}")
             num_processed += 1
@@ -235,7 +248,12 @@ class GoogleDrive:
         type: Literal["file", "folder"] | None = None,
         comment: str | None = None,
     ) -> DiffObj:
-        diff = {side: side, path: str(path), type: type, comment: comment}
+        diff = {
+            "side": side,
+            "path": str(path),
+            "type": type,
+            "comment": comment,
+        }
         return cast(DiffObj, {key: val for key, val in diff.items() if val})
 
     @staticmethod
@@ -296,3 +314,6 @@ class GoogleDrive:
 
     def compare_folders(self, path: Path, folder_id: str) -> Sequence[DiffObj]:
         return list(self._compare_folders(path, folder_id) or [])
+
+
+googledrive = GoogleDrive(default_drive_helper)
