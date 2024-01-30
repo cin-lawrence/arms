@@ -62,7 +62,7 @@ class DriveHelper:
             self.service.files()
             .list(
                 pageSize=pageSize,
-                q=f"'{folder_id} in parents",
+                q=f"'{folder_id}' in parents",
                 fields=fields,
             )
             .execute()
@@ -70,7 +70,7 @@ class DriveHelper:
 
     @staticmethod
     def to_percent(progress: float) -> str:
-        return f"{round(progress, 2)}%"
+        return f"{round(progress * 100, 2)}%"
 
     def download_file(
         self,
