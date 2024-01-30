@@ -1,6 +1,8 @@
 from enum import StrEnum
 from typing import TypedDict
 
+from .enums import MimeType
+
 
 class PermissionsTypes(StrEnum):
     User = "user"
@@ -29,3 +31,20 @@ class PermissionsCreateResponse(TypedDict):
     id: str
     type: PermissionsTypes
     role: PermissionsRoles
+
+
+# https://developers.google.com/drive/api/reference/rest/v3/files#File
+class File(TypedDict):
+    kind: str
+    id: str
+    name: str
+    size: str
+    mimeType: MimeType
+    md5Checksum: str
+
+
+class FilesListResponse(TypedDict):
+    nextPageToken: str
+    kind: str
+    incompleteSearch: bool
+    files: list[File]
