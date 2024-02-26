@@ -57,7 +57,7 @@ class GoogleDrive:
         "md5Checksum",
     ]
     DefaultFieldsListFolder: str = (
-        f"nextPageToken, files({'.'.join(DefaultFieldsFile)})"
+        f"nextPageToken, files({', '.join(DefaultFieldsFile)})"
     )
 
     def __init__(self, helper: DriveHelper):
