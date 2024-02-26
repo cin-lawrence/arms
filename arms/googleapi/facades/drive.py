@@ -48,8 +48,16 @@ DefaultDownloadOptions = DownloadOptions(ignore_existing=True)
 
 
 class GoogleDrive:
+    DefaultFieldsFile: list[str] = [
+        "kind",
+        "id",
+        "name",
+        "mimeType",
+        "size",
+        "md5Checksum",
+    ]
     DefaultFieldsListFolder: str = (
-        "nextPageToken, files(kind, id, name, mimeType, size, md5Checksum)"
+        f"nextPageToken, files({', '.join(DefaultFieldsFile)})"
     )
 
     def __init__(self, helper: DriveHelper):
@@ -314,6 +322,14 @@ class GoogleDrive:
 
     def compare_folders(self, path: Path, folder_id: str) -> Sequence[DiffObj]:
         return list(self._compare_folders(path, folder_id) or [])
+
+    def upload_file_to_folder(
+        self,
+        filepath: Path,
+        folder_id: str,
+    ) -> File:
+        # https://github.com/googleworkspace/python-samples/blob/main/drive/snippets/drive-v3/file_snippet/upload_to_folder.py # noqa
+        return self.helper.upload_file_to_folder(filepath, folder_id)
 
 
 googledrive = GoogleDrive(default_drive_helper)

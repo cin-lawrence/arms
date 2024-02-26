@@ -1,9 +1,11 @@
 import logging
 from functools import cached_property
 from io import BytesIO
+from mimetypes import guess_type
+from pathlib import Path
 
 from googleapiclient.discovery import Resource
-from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
 from ..payloads.drive import (
     File,
@@ -85,6 +87,31 @@ class DriveHelper:
             self.logger.debug(
                 f"Downloading... ({self.to_percent(status.progress())})"
             )
+
+    def upload_file_to_folder(
+        self,
+        filepath: Path,
+        folder_id: str,
+        resumable: bool = False,
+    ) -> File:
+        metadata = {
+            "name": filepath.name,
+            "parents": [folder_id],
+        }
+        mimetype, _ = guess_type(str(filepath))
+        media = MediaFileUpload(
+            str(filepath),
+            mimetype=mimetype,
+            resumable=resumable,
+        )
+        return (
+            self.service.files()
+            .create(
+                body=metadata,
+                media_body=media,
+            )
+            .execute()
+        )
 
 
 default_drive_helper = DriveHelper(default_google_service_factory)
