@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arms"
+version = "0.0.1"
+requires-python = ">=3.11"
+dependencies = [
+  "aiohttp>=3.8.6",
+  "aiofiles>=23.2.1",
+  "pydantic>=2.5.2",
+  "pydantic-settings>=2.1.0",
+  "pytest>=7.4.2",
+  "pytest-cov>=4.1.0",
+
+  "google-api-python-client>=2.110.0",
+  "google-auth-oauthlib>=1.1.0",
+]
