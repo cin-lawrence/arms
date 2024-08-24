@@ -42,6 +42,8 @@ class File(TypedDict):
     mimeType: MimeType
     md5Checksum: str
 
+    createdTime: str
+
 
 class FilesListResponse(TypedDict):
     nextPageToken: str
