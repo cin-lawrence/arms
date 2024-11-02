@@ -140,7 +140,7 @@ class TransferHelper:
                 dst_page = await self.dt.create_page(
                     PageCreate(
                         spaceId=space_id,
-                        status=PageStatus.Current,
+                        status=PageStatusCreate.Current,
                         title=src_page.title,
                         parentId=current_parent_id,
                         body=PageBodyStorageRef(value=""),

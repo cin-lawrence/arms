@@ -1,4 +1,5 @@
-from .base import BaseModel, BaseUnit
+from pydantic import BaseModel
+from .base import BaseUnit
 
 
 class ProfilePicture(BaseModel):

@@ -4,11 +4,10 @@ from datetime import datetime
 from enum import StrEnum, auto
 from typing import Annotated, Any, Literal
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from ..utils import Soup
 from .base import (
-    BaseModel,
     BaseUnit,
     DumpByConfigMixin,
     DumpConfig,

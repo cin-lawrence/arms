@@ -3,10 +3,9 @@ from mimetypes import guess_extension
 from typing import Annotated, Any
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from .base import (
-    BaseModel,
     BaseUnit,
     DumpConfig,
     Link,
@@ -127,6 +126,7 @@ class AttachmentCreate(_AttachmentPartial):
 
 class Attachment(_AttachmentPartial):
     metadata: AttachmentMetadata
+    extensions: AttachmentExtensions
 
 
 class AttachmentCreateResponse(ResourceCreateResponse[Attachment]):

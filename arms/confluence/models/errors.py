@@ -15,7 +15,7 @@ class Error(BaseModel):
     detail: str | None = None
 
 
-class ErrorResponse(BaseModel):
+class ErrorResponse(Error):
     errors: list[Error]
 
     @classmethod

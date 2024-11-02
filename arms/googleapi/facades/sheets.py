@@ -1,10 +1,17 @@
-from ..helpers.sheets import SpreadsheetsHelper, default_sheets_helper
-from ..payloads.sheets import (
-    BatchUpdateResponse,
-    ValueInputOption,
-    ValuesClearResponse,
-    ValuesUpdateResponse,
+from __future__ import annotations
+from typing import Literal, TYPE_CHECKING
+
+from googleapiclient._apis.sheets.v4.schemas import (
+    BatchGetValuesResponse,
+    BatchUpdateSpreadsheetResponse,
+    ClearValuesResponse,
+    Spreadsheet,
+    SpreadsheetProperties,
+    UpdateValuesResponse,
+    ValueRange,
+    GridRange,
 )
+from ..helpers.sheets import SpreadsheetsHelper, default_sheets_helper
 from ..types import SheetsData
 
 _DefaultA1Notation = "A1"
@@ -31,8 +38,10 @@ class Sheet:
         self,
         data: SheetsData,
         range: str = _DefaultA1Notation,
-        option: ValueInputOption = ValueInputOption.UserEntered,
-    ) -> ValuesUpdateResponse:
+        option: Literal[
+            'INPUT_VALUE_OPTION_UNSPECIFIED', 'RAW', 'USER_ENTERED'
+        ] = 'USER_ENTERED',
+    ) -> UpdateValuesResponse:
         return self.service.update_values(
             self.book.id,
             data,
@@ -43,7 +52,7 @@ class Sheet:
     def clear_all_values(
         self,
         range: str = _DefaultA1NotationAll,
-    ) -> ValuesClearResponse:
+    ) -> ClearValuesResponse:
         return self.book.clear_values(
             range,
         )
@@ -67,8 +76,10 @@ class Book:
         sheet_name: str,
         data: SheetsData,
         range: str = _DefaultA1Notation,
-        option: ValueInputOption = ValueInputOption.UserEntered,
-    ) -> ValuesUpdateResponse:
+        option: Literal[
+            'INPUT_VALUE_OPTION_UNSPECIFIED', 'RAW', 'USER_ENTERED'
+        ] = 'USER_ENTERED',
+    ) -> UpdateValuesResponse:
         """
         Range should be in A1 notation.
         Specifying A1 would automatically fit the corresponding range of data.
@@ -80,8 +91,10 @@ class Book:
         self,
         data: SheetsData,
         range: str = _DefaultA1Notation,
-        option: ValueInputOption = ValueInputOption.UserEntered,
-    ) -> ValuesUpdateResponse:
+        option: Literal[
+            'INPUT_VALUE_OPTION_UNSPECIFIED', 'RAW', 'USER_ENTERED'
+        ] = 'USER_ENTERED',
+    ) -> UpdateValuesResponse:
         return self.service.update_values(
             self.id,
             data,
@@ -92,7 +105,7 @@ class Book:
     def update_currency_format(
         self,
         range: str,
-    ) -> BatchUpdateResponse:
+    ) -> BatchUpdateSpreadsheetResponse:
         return self.service.update_currency_format(
             self.id,
             range,
@@ -101,7 +114,7 @@ class Book:
     def clear_values(
         self,
         range: str = _DefaultA1NotationAll,
-    ) -> ValuesClearResponse:
+    ) -> ClearValuesResponse:
         return self.service.clear_values(
             self.id,
             range=range,
@@ -123,8 +136,10 @@ class GoogleSheet:
         book_id: str,
         data: SheetsData,
         range: str = _DefaultA1Notation,
-        option: ValueInputOption = ValueInputOption.UserEntered,
-    ) -> ValuesUpdateResponse:
+        option: Literal[
+            'INPUT_VALUE_OPTION_UNSPECIFIED', 'RAW', 'USER_ENTERED'
+        ] = 'USER_ENTERED',
+    ) -> UpdateValuesResponse:
         return self.helper.update_values_in_range(
             book_id,
             range,
@@ -138,7 +153,7 @@ class GoogleSheet:
         self,
         book_id: str,
         range: str,
-    ) -> BatchUpdateResponse:
+    ) -> BatchUpdateSpreadsheetResponse:
         return self.helper.update_currency_format(
             book_id,
             range,
@@ -148,7 +163,7 @@ class GoogleSheet:
         self,
         book_id: str,
         range: str = _DefaultA1NotationAll,
-    ) -> ValuesClearResponse:
+    ) -> ClearValuesResponse:
         return self.helper.clear_values(
             book_id,
             range=range,

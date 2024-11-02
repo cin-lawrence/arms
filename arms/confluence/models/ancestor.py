@@ -1,7 +1,9 @@
 from enum import StrEnum, auto
 from typing import Literal
 
-from .base import BaseModel, ManyResourceResponse
+from pydantic import BaseModel
+
+from .base import ManyResourceResponse
 
 
 class AncestorType(StrEnum):

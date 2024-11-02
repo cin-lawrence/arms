@@ -9,13 +9,10 @@ from pathlib import Path
 from typing import Annotated, Any, Literal, NotRequired, TypedDict, cast
 
 from googleapiclient.errors import HttpError
+from googleapiclient._apis.drive.v3 import DriveResource
+from googleapiclient._apis.drive.v3.schemas import File, Permission, FileList
 
 from ..helpers.drive import DriveHelper, default_drive_helper
-from ..payloads.drive import (
-    File,
-    PermissionsCreateRequest,
-    PermissionsCreateResponse,
-)
 from ..payloads.enums import MimeType
 
 
@@ -69,8 +66,8 @@ class GoogleDrive:
     def grant_permissions(
         self,
         file_id: str,
-        perm_obj: PermissionsCreateRequest,
-    ) -> PermissionsCreateResponse:
+        perm_obj: Permission,
+    ) -> Permission:
         return self.helper.grant_permissions(file_id, perm_obj)
 
     def delete_file(self, file_id: str) -> str:

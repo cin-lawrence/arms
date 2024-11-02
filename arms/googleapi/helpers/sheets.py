@@ -1,21 +1,25 @@
 import re
 import string
 from functools import cached_property
-from typing import Any, cast
+from typing import Any, Literal, cast, TYPE_CHECKING
 
 from googleapiclient.discovery import Resource
-
-from ..payloads.sheets import (
-    BatchUpdateResponse,
-    CreateResponse,
-    GridRange,
-    ValueInputOption,
+from googleapiclient._apis.sheets.v4.schemas import (
+    BatchGetValuesResponse,
+    BatchUpdateSpreadsheetResponse,
+    ClearValuesResponse,
+    Spreadsheet,
+    SpreadsheetProperties,
+    UpdateValuesResponse,
     ValueRange,
-    ValuesBatchGetResponse,
-    ValuesClearResponse,
-    ValuesUpdateResponse,
+    GridRange,
+    Sheet,
 )
 from .factory import GoogleServiceFactory, default_google_service_factory
+
+if TYPE_CHECKING:
+    from googleapiclient._apis.sheets.v4.resources import SheetsResource
+
 
 _PatternA1Notation = re.compile(r"^(?:(.+)!)*(\D+)(\d*):(\D+)(\d*)$")
 _DefaultA1NotationAll = "A1:ZZ"
@@ -35,8 +39,8 @@ class SpreadsheetsHelper:
         self.factory = factory
 
     @cached_property
-    def service(self) -> Resource:
-        return self.factory.get_sheet_service()
+    def service(self) -> 'SheetsResource.SpreadsheetsResource':
+        return self.factory.get_spreadsheet_service()
 
     def _a1notation_to_gridrange(
         self,
@@ -57,7 +61,9 @@ class SpreadsheetsHelper:
         sheet_title = title or sheet_title
         sheet_id = 0
 
-        spreadsheet = self.service.get(spreadsheetId=spreadsheet_id)
+        spreadsheet: Spreadsheet = (
+            self.service.get(spreadsheetId=spreadsheet_id).execute()
+        )
         if sheet_title:
             sheets = filter(
                 lambda sh: (
@@ -70,8 +76,8 @@ class SpreadsheetsHelper:
                 raise ValueError(f"sheet titled {sheet_title} not found")
             sheet_id = first_sheet["properties"]["sheetId"]
         elif sheet_index:
-            sheet = spreadsheet.get("sheets")[sheet_index]
-            sheet_id = sheet["sheetId"]
+            sheet: Sheet = spreadsheet.get("sheets", [])[sheet_index]
+            sheet_id = sheet["properties"]["sheetId"]
 
         gridrange = {
             "sheetId": sheet_id,
@@ -88,14 +94,14 @@ class SpreadsheetsHelper:
     def create_sheet(
         self,
         title: str,
-        config: dict[str, Any] | None = None,
-    ) -> CreateResponse:
+        config: Spreadsheet | None = None,
+    ) -> Spreadsheet:
         config = config or {}
-        properties = {
+        properties: SpreadsheetProperties = {
             **config.get("properties", {}),
             "title": title,
         }
-        spreadsheet_config: dict[str, Any] = {
+        spreadsheet_config: Spreadsheet = {
             **(config or {}),
             "properties": properties,
         }
@@ -108,7 +114,7 @@ class SpreadsheetsHelper:
         self,
         sheet_id: str,
         ranges: list[str],
-    ) -> ValuesBatchGetResponse:
+    ) -> BatchGetValuesResponse:
         # https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchGet
         return (
             self.service.values()
@@ -124,8 +130,10 @@ class SpreadsheetsHelper:
         sheet_id: str,
         range: str,
         body: ValueRange,
-        value_input_option: ValueInputOption = ValueInputOption.UserEntered,
-    ) -> ValuesUpdateResponse:
+        value_input_option: Literal[
+            'INPUT_VALUE_OPTION_UNSPECIFIED', 'RAW', 'USER_ENTERED'
+        ] = 'USER_ENTERED',
+    ) -> UpdateValuesResponse:
         return (
             self.service.values()
             .update(
@@ -141,7 +149,7 @@ class SpreadsheetsHelper:
         self,
         sheet_id: str,
         range: str | GridRange,
-    ) -> BatchUpdateResponse:
+    ) -> BatchUpdateSpreadsheetResponse:
         if isinstance(range, str):
             range = self._a1notation_to_gridrange(sheet_id, range)
 
@@ -171,13 +179,13 @@ class SpreadsheetsHelper:
         self,
         sheet_id: str,
         range: str = _DefaultA1NotationAll,
-    ) -> ValuesClearResponse:
+    ) -> ClearValuesResponse:
         return (
             self.service.values()
             .clear(
                 spreadsheetId=sheet_id,
                 range=range,
-                body=None,
+                body={},
             )
             .execute()
         )
