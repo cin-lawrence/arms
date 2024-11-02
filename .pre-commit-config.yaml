@@ -1,50 +1,71 @@
+---
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-    -   id: check-added-large-files
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.5.0'  # Use the sha / tag you want to point at
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args:
+          - --maxkb=1000
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.26.3
     hooks:
-    - id: mypy
-      files: ^(arms/|tests/)
-      additional_dependencies:
-        - "pydantic==2.4.2"
-        - "types-python-dateutil==2.8.19"
-        - "types-aiofiles"
-        - "types-requests"
--   repo: https://github.com/PyCQA/flake8
-    rev: 6.1.0
+      - id: yamllint
+        name: yamllint
+        entry: yamllint
+        language: python
+        types:
+          - yaml
+        args:
+          - --strict
+  - repo: https://github.com/lyz-code/yamlfix.git
+    rev: 1.16.1
     hooks:
-    - id: flake8
-      args: [
-        "--ignore=E203,W503",
-      ]
--   repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
+      - id: yamlfix
+        entry: env YAMLFIX_SEQUENCE_STYLE=block_style yamlfix
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
     hooks:
-    - id: pyupgrade
-      args: ["--py38-plus"]
--   repo: https://github.com/psf/black
-    rev: 23.11.0
+      - id: codespell
+        args:
+          - --ignore-words-list=NIN,braket
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.42.0
     hooks:
-    - id: black
-      args: ["--line-length", "79"]
--   repo: https://github.com/PyCQA/isort
-    rev: 5.13.1
+      - id: markdownlint
+        name: markdownlint-fix
+        description: Fixes the style of Markdown/Commonmark files.
+        entry: markdownlint --fix
+        language: node
+        types:
+          - markdown
+        args:
+          - --disable
+          - MD013
+  # - repo: https://github.com/ComPWA/taplo-pre-commit
+  #   rev: v0.9.3
+  #   hooks:
+  #     - id: taplo-format
+  #     - id: taplo-lint
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.12.1
     hooks:
-    - id: isort
-      args: ["--profile", "black", "--line-length", "79"]
--   repo: https://github.com/fsouza/autoflake8
-    rev: v0.4.1
+      - id: mypy
+        files: ^(arms/|tests/)
+        additional_dependencies:
+          - pip>=23.2.1
+          - pydantic>=2.6.3
+          - types-python-dateutil>=2.8.19
+          - types-aiofiles
+          - types-requests
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.0
     hooks:
-    - id: autoflake8
-      args: [
-        "--in-place",
-        "--remove-unused-variables",
-      ]
+      - id: ruff
+        args:
+          - --fix
+      - id: ruff-format
