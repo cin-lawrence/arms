@@ -26,14 +26,17 @@ class Version(BaseUnit[VersionExpandable]):
     by: User
     when: datetime
     friendlyWhen: str
-    message: Annotated[
-        str,
-        Field(
-            description=(
-                "will present if `comment` is present in attachment create"
-            )
-        ),
-    ] | None = None
+    message: (
+        Annotated[
+            str,
+            Field(
+                description=(
+                    "will present if `comment` is present in attachment create"
+                )
+            ),
+        ]
+        | None
+    ) = None
     number: int
     minorEdit: bool
     contentTypeModified: bool
@@ -72,14 +75,17 @@ class AttachmentMetadata(_MetadataPartial):
 class AttachmentExtensions(BaseModel):
     mediaType: str
     fileSize: int
-    comment: Annotated[
-        str,
-        Field(
-            description=(
-                "will present if `comment` is present in attachment create"
-            )
-        ),
-    ] | None = None
+    comment: (
+        Annotated[
+            str,
+            Field(
+                description=(
+                    "will present if `comment` is present in attachment create"
+                )
+            ),
+        ]
+        | None
+    ) = None
     mediaTypeDescription: str | None = None
     fileId: UUID
     collectionName: str

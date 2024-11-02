@@ -1,10 +1,10 @@
-import logging
 from __future__ import annotations
+
+import logging
 from functools import cached_property
 from io import BytesIO
 from mimetypes import guess_type
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from googleapiclient._apis.drive.v3 import DriveResource

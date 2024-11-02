@@ -1,15 +1,10 @@
 from __future__ import annotations
-from typing import Literal, TYPE_CHECKING
+from typing import Literal
 
 from googleapiclient._apis.sheets.v4.schemas import (
-    BatchGetValuesResponse,
     BatchUpdateSpreadsheetResponse,
     ClearValuesResponse,
-    Spreadsheet,
-    SpreadsheetProperties,
     UpdateValuesResponse,
-    ValueRange,
-    GridRange,
 )
 from ..helpers.sheets import SpreadsheetsHelper, default_sheets_helper
 from ..types import SheetsData
@@ -39,8 +34,8 @@ class Sheet:
         data: SheetsData,
         range: str = _DefaultA1Notation,
         option: Literal[
-            'INPUT_VALUE_OPTION_UNSPECIFIED', 'RAW', 'USER_ENTERED'
-        ] = 'USER_ENTERED',
+            "INPUT_VALUE_OPTION_UNSPECIFIED", "RAW", "USER_ENTERED"
+        ] = "USER_ENTERED",
     ) -> UpdateValuesResponse:
         return self.service.update_values(
             self.book.id,
@@ -77,8 +72,8 @@ class Book:
         data: SheetsData,
         range: str = _DefaultA1Notation,
         option: Literal[
-            'INPUT_VALUE_OPTION_UNSPECIFIED', 'RAW', 'USER_ENTERED'
-        ] = 'USER_ENTERED',
+            "INPUT_VALUE_OPTION_UNSPECIFIED", "RAW", "USER_ENTERED"
+        ] = "USER_ENTERED",
     ) -> UpdateValuesResponse:
         """
         Range should be in A1 notation.
@@ -92,8 +87,8 @@ class Book:
         data: SheetsData,
         range: str = _DefaultA1Notation,
         option: Literal[
-            'INPUT_VALUE_OPTION_UNSPECIFIED', 'RAW', 'USER_ENTERED'
-        ] = 'USER_ENTERED',
+            "INPUT_VALUE_OPTION_UNSPECIFIED", "RAW", "USER_ENTERED"
+        ] = "USER_ENTERED",
     ) -> UpdateValuesResponse:
         return self.service.update_values(
             self.id,
@@ -137,8 +132,8 @@ class GoogleSheet:
         data: SheetsData,
         range: str = _DefaultA1Notation,
         option: Literal[
-            'INPUT_VALUE_OPTION_UNSPECIFIED', 'RAW', 'USER_ENTERED'
-        ] = 'USER_ENTERED',
+            "INPUT_VALUE_OPTION_UNSPECIFIED", "RAW", "USER_ENTERED"
+        ] = "USER_ENTERED",
     ) -> UpdateValuesResponse:
         return self.helper.update_values_in_range(
             book_id,

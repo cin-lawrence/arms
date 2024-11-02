@@ -9,8 +9,7 @@ from pathlib import Path
 from typing import Annotated, Any, Literal, NotRequired, TypedDict, cast
 
 from googleapiclient.errors import HttpError
-from googleapiclient._apis.drive.v3 import DriveResource
-from googleapiclient._apis.drive.v3.schemas import File, Permission, FileList
+from googleapiclient._apis.drive.v3.schemas import File, Permission
 
 from ..helpers.drive import DriveHelper, default_drive_helper
 from ..payloads.enums import MimeType
@@ -24,8 +23,7 @@ def md5(filepath: Path) -> str:
     return hash_md5.hexdigest()
 
 
-class OperationalError(Exception):
-    ...
+class OperationalError(Exception): ...
 
 
 class DiffObj(TypedDict):

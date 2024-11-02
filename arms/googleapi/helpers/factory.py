@@ -1,10 +1,10 @@
-import os
 from __future__ import annotations
+
+import os
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
 from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import Resource, build
+from googleapiclient.discovery import build
 from googleapiclient._apis.sheets.v4.resources import SheetsResource
 from googleapiclient._apis.drive.v3.resources import DriveResource
 
@@ -59,14 +59,14 @@ class GoogleServiceFactory:
 
     @lru_cache
     def get_spreadsheet_service(self) -> SheetsResource.SpreadsheetsResource:
-        credentials = self.get_credentials(self.get_scopes('sheets_drive'))
-        svc: 'SheetsResource' = build('sheets', 'v4', credentials=credentials)
+        credentials = self.get_credentials(self.get_scopes("sheets_drive"))
+        svc: "SheetsResource" = build("sheets", "v4", credentials=credentials)
         return svc.spreadsheets()
 
     @lru_cache
     def get_drive_service(self) -> DriveResource:
-        credentials = self.get_credentials(self.get_scopes('sheets_drive'))
-        return build('drive', 'v3', credentials=credentials)
+        credentials = self.get_credentials(self.get_scopes("sheets_drive"))
+        return build("drive", "v3", credentials=credentials)
 
 
 default_google_service_factory = GoogleServiceFactory()

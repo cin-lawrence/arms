@@ -1,9 +1,8 @@
 import re
 import string
 from functools import cached_property
-from typing import Any, Literal, cast, TYPE_CHECKING
+from typing import Literal, cast, TYPE_CHECKING
 
-from googleapiclient.discovery import Resource
 from googleapiclient._apis.sheets.v4.schemas import (
     BatchGetValuesResponse,
     BatchUpdateSpreadsheetResponse,
@@ -39,7 +38,7 @@ class SpreadsheetsHelper:
         self.factory = factory
 
     @cached_property
-    def service(self) -> 'SheetsResource.SpreadsheetsResource':
+    def service(self) -> "SheetsResource.SpreadsheetsResource":
         return self.factory.get_spreadsheet_service()
 
     def _a1notation_to_gridrange(
@@ -61,9 +60,9 @@ class SpreadsheetsHelper:
         sheet_title = title or sheet_title
         sheet_id = 0
 
-        spreadsheet: Spreadsheet = (
-            self.service.get(spreadsheetId=spreadsheet_id).execute()
-        )
+        spreadsheet: Spreadsheet = self.service.get(
+            spreadsheetId=spreadsheet_id
+        ).execute()
         if sheet_title:
             sheets = filter(
                 lambda sh: (
@@ -131,8 +130,8 @@ class SpreadsheetsHelper:
         range: str,
         body: ValueRange,
         value_input_option: Literal[
-            'INPUT_VALUE_OPTION_UNSPECIFIED', 'RAW', 'USER_ENTERED'
-        ] = 'USER_ENTERED',
+            "INPUT_VALUE_OPTION_UNSPECIFIED", "RAW", "USER_ENTERED"
+        ] = "USER_ENTERED",
     ) -> UpdateValuesResponse:
         return (
             self.service.values()
