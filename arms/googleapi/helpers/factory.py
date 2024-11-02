@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 import os
 from functools import lru_cache
 
 from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import Resource, build
+from googleapiclient.discovery import build
+from googleapiclient._apis.sheets.v4.resources import SheetsResource
+from googleapiclient._apis.drive.v3.resources import DriveResource
 
 
 class GoogleServiceFactory:
@@ -16,17 +20,11 @@ class GoogleServiceFactory:
         ],
     }
 
-    mp_svc_buildparams: dict[str, tuple[str, str]] = {
-        "sheets": ("sheets", "v4"),
-        "drive": ("drive", "v3"),
-    }
-
     def __init__(self, service_account_path: str | None = None):
         self._service_account_path = (
             service_account_path or self.default_service_account_path
         )
         self._permissions = self.mp_perm_scopes.keys()
-        self._services = self.mp_svc_buildparams.keys()
 
     @property
     def default_service_account_path(self) -> str:
@@ -43,39 +41,32 @@ class GoogleServiceFactory:
                 f"set it in env var {self.DefaultEnvVar} "
                 "or explicitly pass it in the constructor."
             )
-        return Credentials.from_service_account_file(
+        return Credentials.from_service_account_file(  # type: ignore[no-untyped-call] # noqa
             self.service_account_path,
             scopes=scopes,
         )
 
-    @lru_cache
-    def get_service(self, service_name: str, permission: str) -> Resource:
-        """Creates the service in the most intuitive and simplest way.
-
-        >>> get_service('sheets', 'sheets_drive')
-        """
+    def get_scopes(self, permission: str) -> list[str]:
         if permission not in self.mp_perm_scopes:
             raise ValueError(
-                f"unknown permission: {permission}, "
-                f"must be one of {self._permissions}"
+                "Unknown permission: %s, must be one of %s"
+                % (
+                    permission,
+                    ", ".join(self._permissions),
+                )
             )
+        return self.mp_perm_scopes[permission]
 
-        if service_name not in self.mp_svc_buildparams:
-            raise ValueError(
-                f"unknown service: {service_name}, "
-                f"must be one of {self._services}"
-            )
-
-        credentials = self.get_credentials(self.mp_perm_scopes[permission])
-        svc, version = self.mp_svc_buildparams[service_name]
-        return build(svc, version, credentials=credentials)
-
-    def get_sheet_service(self) -> Resource:
-        svc = self.get_service("sheets", "sheets_drive")
+    @lru_cache
+    def get_spreadsheet_service(self) -> SheetsResource.SpreadsheetsResource:
+        credentials = self.get_credentials(self.get_scopes("sheets_drive"))
+        svc: "SheetsResource" = build("sheets", "v4", credentials=credentials)
         return svc.spreadsheets()
 
-    def get_drive_service(self) -> Resource:
-        return self.get_service("drive", "sheets_drive")
+    @lru_cache
+    def get_drive_service(self) -> DriveResource:
+        credentials = self.get_credentials(self.get_scopes("sheets_drive"))
+        return build("drive", "v3", credentials=credentials)
 
 
 default_google_service_factory = GoogleServiceFactory()

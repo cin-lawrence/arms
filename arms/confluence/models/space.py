@@ -1,6 +1,8 @@
 from datetime import datetime
 
-from .base import BaseModel, BaseUnit, Link, ManyResourceResponse
+from pydantic import BaseModel
+
+from .base import BaseUnit, Link, ManyResourceResponse
 
 
 class SpaceExpandable(BaseModel):

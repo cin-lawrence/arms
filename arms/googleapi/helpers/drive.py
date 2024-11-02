@@ -1,18 +1,15 @@
+from __future__ import annotations
+
 import logging
 from functools import cached_property
 from io import BytesIO
 from mimetypes import guess_type
 from pathlib import Path
 
-from googleapiclient.discovery import Resource
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
+from googleapiclient._apis.drive.v3 import DriveResource
+from googleapiclient._apis.drive.v3.schemas import File, Permission, FileList
 
-from ..payloads.drive import (
-    File,
-    FilesListResponse,
-    PermissionsCreateRequest,
-    PermissionsCreateResponse,
-)
 from .factory import GoogleServiceFactory, default_google_service_factory
 
 
@@ -25,14 +22,14 @@ class DriveHelper:
         )
 
     @cached_property
-    def service(self) -> Resource:
+    def service(self) -> DriveResource:
         return self.factory.get_drive_service()
 
     def grant_permissions(
         self,
         file_id: str,
-        perm_obj: PermissionsCreateRequest,
-    ) -> PermissionsCreateResponse:
+        perm_obj: Permission,
+    ) -> Permission:
         return (
             self.service.permissions()
             .create(
@@ -56,7 +53,7 @@ class DriveHelper:
         folder_id: str,
         fields: str,
         pageSize: int = 100,
-    ) -> FilesListResponse:
+    ) -> FileList:
         """
         https://developers.google.com/drive/api/reference/rest/v3/files/list
         """
@@ -94,7 +91,7 @@ class DriveHelper:
         folder_id: str,
         resumable: bool = False,
     ) -> File:
-        metadata = {
+        metadata: File = {
             "name": filepath.name,
             "parents": [folder_id],
         }

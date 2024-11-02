@@ -3,10 +3,9 @@ from mimetypes import guess_extension
 from typing import Annotated, Any
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from .base import (
-    BaseModel,
     BaseUnit,
     DumpConfig,
     Link,
@@ -27,14 +26,17 @@ class Version(BaseUnit[VersionExpandable]):
     by: User
     when: datetime
     friendlyWhen: str
-    message: Annotated[
-        str,
-        Field(
-            description=(
-                "will present if `comment` is present in attachment create"
-            )
-        ),
-    ] | None = None
+    message: (
+        Annotated[
+            str,
+            Field(
+                description=(
+                    "will present if `comment` is present in attachment create"
+                )
+            ),
+        ]
+        | None
+    ) = None
     number: int
     minorEdit: bool
     contentTypeModified: bool
@@ -73,14 +75,17 @@ class AttachmentMetadata(_MetadataPartial):
 class AttachmentExtensions(BaseModel):
     mediaType: str
     fileSize: int
-    comment: Annotated[
-        str,
-        Field(
-            description=(
-                "will present if `comment` is present in attachment create"
-            )
-        ),
-    ] | None = None
+    comment: (
+        Annotated[
+            str,
+            Field(
+                description=(
+                    "will present if `comment` is present in attachment create"
+                )
+            ),
+        ]
+        | None
+    ) = None
     mediaTypeDescription: str | None = None
     fileId: UUID
     collectionName: str
@@ -127,6 +132,7 @@ class AttachmentCreate(_AttachmentPartial):
 
 class Attachment(_AttachmentPartial):
     metadata: AttachmentMetadata
+    extensions: AttachmentExtensions
 
 
 class AttachmentCreateResponse(ResourceCreateResponse[Attachment]):
