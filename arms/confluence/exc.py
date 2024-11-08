@@ -1,14 +1,14 @@
 from aiohttp.client_exceptions import ClientResponseError
 
-from .models.errors import ErrorResponse
+from .models.errors import ResponseError
 
 
 class ClientError(Exception):
     def __init__(
         self,
         err: ClientResponseError,
-        payload: ErrorResponse | str,
-    ):
+        payload: ResponseError | str,
+    ) -> None:
         self.request_info = err.request_info
         self.status = err.status
         self.message = err.message
@@ -21,4 +21,4 @@ class ClientError(Exception):
 class ClientInternalError(ClientError): ...
 
 
-class ClientNotAuthenticated(ClientError): ...
+class ClientNotAuthenticatedError(ClientError): ...

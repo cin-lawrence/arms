@@ -42,9 +42,10 @@ class DumpByConfigMixin(BaseModel):
 
     @model_serializer(mode="wrap")
     def serialize(
-        self, handler: Callable[[Any], dict[str, Any]]
+        self,
+        handler: Callable[[Any], dict[str, Any]],
     ) -> dict[str, Any]:
-        return self._dump_by_config(handler(self))  # type: ignore
+        return self._dump_by_config(handler(self))  # type: ignore[arg-type,call-arg]
 
 
 class _ULinks(DumpByConfigMixin, BaseModel):
@@ -76,9 +77,9 @@ OptionalULinks = Annotated[_ULinks | None, Field(alias="_links")]
 class _BaseUnitPartial(DumpByConfigMixin, BaseModel, Generic[ExpandableType]):
     _DumpConfig = DumpConfig(by_alias=True)
 
-    # uExpandable: UExpandable | None = None
     uExpandable: Annotated[
-        ExpandableType | None, Field(alias="_expandable")
+        ExpandableType | None,
+        Field(alias="_expandable"),
     ] = None
     uLinks: OptionalULinks = None
 

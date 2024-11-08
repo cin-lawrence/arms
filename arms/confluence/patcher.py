@@ -1,12 +1,21 @@
 import logging
 from copy import deepcopy
-from typing import Annotated, Any, Callable, TypeAlias, TypedDict, TypeVar
+from typing import (
+    Annotated,
+    Any,
+    Callable,
+    Final,
+    TypeAlias,
+    TypedDict,
+    TypeVar,
+)
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 from pydantic.functional_validators import BeforeValidator
 
 Attrs: TypeAlias = dict[str, UUID | int | str]
+logger = logging.getLogger(__name__)
 
 
 def ensure_array(value: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
@@ -21,6 +30,7 @@ class Slice(BaseModel):
 
 
 class MediaSingleSlice(Slice):
+    MIN_CONTENT_LENGTH: Final[int] = 2
     type: str = "mediaSingle"
     attrs: Attrs = {"layout": "center"}
 
@@ -33,7 +43,7 @@ class MediaSingleSlice(Slice):
 
     @property
     def caption(self) -> str | None:
-        if len(self.content) < 2:
+        if len(self.content) < self.MIN_CONTENT_LENGTH:
             return None
         second_slice: Slice = self.content[1]
         if len(second_slice.content) == 0:
@@ -62,36 +72,36 @@ def alter_media_single(
     image_id: UUID,
     collection: str,
 ) -> dict[str, Any]:
-    """explicitly specify width and height would inflate the space occupied
+    """Alter the identity fields of a media payload.
+
+    Explicitly specify width and height would inflate the space occupied
     by the image unexpectedly, hence they are commented and left as options.
     """
     content_attrs = mss.content_attrs or {}
     image = Image.model_validate(
-        dict(
-            id=image_id,
-            # width=content_attrs.get("width", 0),
-            # height=content_attrs.get("height", 0),
-            caption=mss.caption,
-            collection=collection,
-            type=content_attrs.get("type", ""),
-        )
+        {
+            "id": image_id,
+            "caption": mss.caption,
+            "collection": collection,
+            "type": content_attrs.get("type", ""),
+        },
     )
     slice_media = Slice.model_validate(
-        dict(
-            type="media",
-            attrs=image.model_dump(exclude={"caption"}, exclude_unset=True),
-        )
+        {
+            "type": "media",
+            "attrs": image.model_dump(exclude={"caption"}, exclude_unset=True),
+        },
     )
     slice_caption = Slice.model_validate(
-        dict(
-            type="caption",
-            content=[
+        {
+            "type": "caption",
+            "content": [
                 Slice(text=image.caption, type="text"),
             ],
-        )
+        },
     )
     return MediaSingleSlice.model_validate(
-        dict(content=[slice_media, slice_caption])
+        {"content": [slice_media, slice_caption]},
     ).model_dump(exclude_unset=True)
 
 
@@ -108,12 +118,12 @@ def patch(
     path: str = "#root",
 ) -> DictOrList:
     if not isinstance(obj, (list, dict)):
-        logging.debug(f"[level@{level} | {path}]: {obj}")
-        return
+        logger.debug("[Level@%d | %s]: %s", level, path, obj)
+        return None
 
     if isinstance(obj, list):
-        obj_list = {idx: child for idx, child in enumerate(obj)}
-        for key in obj_list:
+        mp_idx_child = dict(enumerate(obj))
+        for key in mp_idx_child:
             try:
                 patchobj[key]
             except (IndexError, KeyError):

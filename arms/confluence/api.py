@@ -4,7 +4,7 @@ import logging
 from enum import StrEnum
 from mimetypes import guess_extension, guess_type
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Final, cast
 from uuid import UUID
 
 import aiofiles
@@ -15,7 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from .creds import BasicAuthCredentials
 from .endpoints import V1Endpoints as V1EndpointsSettings
 from .endpoints import V2Endpoints as V2EndpointsSettings
-from .exc import ClientError, ClientInternalError, ClientNotAuthenticated
+from .exc import ClientError, ClientInternalError, ClientNotAuthenticatedError
 from .models.ancestor import AncestorsResponse
 from .models.attachment import (
     Attachment,
@@ -54,6 +54,8 @@ class ToolkitSettings(BaseSettings):
 class ConfluenceToolkit:
     V1Endpoints = V1EndpointsSettings
     V2Endpoints = V2EndpointsSettings
+    UnauthorizedStatusCode: Final[int] = 401
+    ServerErrorStatusCode: Final[int] = 500
 
     def __init__(
         self,
@@ -61,14 +63,15 @@ class ConfluenceToolkit:
         root: str,
         v1urls: V1EndpointsSettings | None = None,
         v2urls: V2EndpointsSettings | None = None,
-    ):
+    ) -> None:
         self.root = root
         self.v1urls = v1urls or self.V1Endpoints()
         self.v2urls = v2urls or self.V2Endpoints()
 
         self.session = None
         self.credentials = BasicAuth(
-            credentials.username, credentials.password
+            credentials.username,
+            credentials.password,
         )
 
     @classmethod
@@ -89,31 +92,33 @@ class ConfluenceToolkit:
         path: str,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        """
+        """Request confluence APIs.
+
         https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp.ClientSession
         """
-        async with ClientSession() as session:
-            async with session.request(
+        async with (
+            ClientSession() as session,
+            session.request(
                 method,
                 self.construct_url(path),
                 auth=self.credentials,
                 **kwargs,
-            ) as response:
-                text = await response.text()
-                try:
-                    response.raise_for_status()
-                except ClientResponseError as e:
-                    logging.error(text)
-                    logging.exception(e)
-                    if e.status >= 500:
-                        raise ClientInternalError(e, text)
-                    elif e.status == 401:
-                        raise ClientNotAuthenticated(e, text)
-                    raise ClientError(e, text)
-                return await response.json()
+            ) as response,
+        ):
+            text = await response.text()
+            try:
+                response.raise_for_status()
+            except ClientResponseError as err:
+                logging.exception(text)
+                if err.status >= self.ServerErrorStatusCode:
+                    raise ClientInternalError(err, text) from err
+                if err.status == self.UnauthorizedStatusCode:
+                    raise ClientNotAuthenticatedError(err, text) from err
+                raise ClientError(err, text) from err
+            return await response.json()
 
     async def get_spaces(self) -> SpacesResponse:
-        """V1"""
+        """List all spaces (v1)."""
         response = await self.req_in_session(
             RequestMethod.Get,
             self.v1urls.Spaces,
@@ -124,7 +129,7 @@ class ConfluenceToolkit:
         self,
         page_id: int | str,
     ) -> AttachmentsResponse:
-        """V1"""
+        """Get attachments from page (v1)."""
         response = await self.req_in_session(
             RequestMethod.Get,
             self.v1urls.Attachments.format(page_id=str(page_id)),
@@ -139,7 +144,7 @@ class ConfluenceToolkit:
         content_type: str | None = None,
         filename: str | None = None,
     ) -> AttachmentCreateResponse:
-        """V1"""
+        """Create an attachment (V1)."""
         if not filepath.exists():
             raise FileNotFoundError(filepath)
         async with aiofiles.open(filepath, "rb") as asyncfile:
@@ -173,7 +178,8 @@ class ConfluenceToolkit:
         parent_folder: Path | None = None,
         chunk_size: int = _4KB_In_Bytes,
     ) -> None:
-        """Downloads the file at the given URL.
+        """Download the file at the given URL.
+
         The method tries to name the file following its file ID and media type.
         The file name can be specified directly and take precedence.
         The parent folder could also be specified.
@@ -184,24 +190,26 @@ class ConfluenceToolkit:
         if parent_folder:
             Path(parent_folder).mkdir(parents=True, exist_ok=True)
 
-        async with ClientSession() as session:
-            async with session.get(
+        async with (
+            ClientSession() as session,
+            session.get(
                 self.construct_url(url),
                 auth=self.credentials,
-            ) as resp:
-                ext = guess_extension(media_type or "") or ""
-                dst_suffix = file_name or f"{str(file_id)}{ext}"
-                dst = Path(parent_folder or "", dst_suffix)
-                async with aiofiles.open(dst, "wb+") as asyncfile:
-                    async for chunk in resp.content.iter_chunked(chunk_size):
-                        await asyncfile.write(chunk)
+            ) as resp,
+        ):
+            ext = guess_extension(media_type or "") or ""
+            dst_suffix = file_name or f"{file_id!s}{ext}"
+            dst = Path(parent_folder or "", dst_suffix)
+            async with aiofiles.open(dst, "wb+") as asyncfile:
+                async for chunk in resp.content.iter_chunked(chunk_size):
+                    await asyncfile.write(chunk)
 
     async def download_attachments(
         self,
         attachments: list[Attachment],
         parent_folder: Path | None = None,
     ) -> None:
-        """Downloads all files in the get attachments from page request."""
+        """Download all files in the get attachments from page request."""
         if not attachments:
             return
 
@@ -222,7 +230,7 @@ class ConfluenceToolkit:
                     file_id=attachment.extensions.fileId,
                     media_type=attachment.extensions.mediaType,
                     parent_folder=parent_folder,
-                )
+                ),
             )
             for attachment in valid_attachments
             if cast(ULinks, attachment.uLinks).download
@@ -230,14 +238,15 @@ class ConfluenceToolkit:
         await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
 
     async def download_attachment(self) -> None:
-        """V1"""
+        """Download attachment."""
+        # TODO: implement this
 
     async def get_page(
         self,
         page_id: int | str,
         fmt: PageBodyFormat = PageBodyFormat.Storage,
     ) -> PageContent:
-        """V2"""
+        """Get page (v2)."""
         response = await self.req_in_session(
             RequestMethod.Get,
             self.v2urls.Page.format(page_id=str(page_id)),
@@ -249,20 +258,20 @@ class ConfluenceToolkit:
         self,
         query_params: GetPageParams | dict[str, Any],
     ) -> PagesResponse:
-        """V2"""
+        """Get pages (v2)."""
         if isinstance(query_params, dict):
             query_params = GetPageParams.model_validate(query_params)
         response = await self.req_in_session(
             RequestMethod.Get,
             self.v2urls.Pages,
             params=json.loads(
-                query_params.model_dump_json(exclude_unset=True)
+                query_params.model_dump_json(exclude_unset=True),
             ),
         )
         return PagesResponse.model_validate(response)
 
     async def create_page(self, page: PageCreate) -> PageContent:
-        """V2"""
+        """Create page (v2)."""
         response = await self.req_in_session(
             RequestMethod.Post,
             self.v2urls.Pages,
@@ -275,7 +284,7 @@ class ConfluenceToolkit:
         page_id: int | str,
         page: PageUpdate,
     ) -> PageContent:
-        """V2"""
+        """Upload page (v2)."""
         response = await self.req_in_session(
             RequestMethod.Put,
             self.v2urls.Page.format(page_id=page_id),

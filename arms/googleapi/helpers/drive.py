@@ -2,28 +2,36 @@ from __future__ import annotations
 
 import logging
 from functools import cached_property
-from io import BytesIO
 from mimetypes import guess_type
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
-from googleapiclient._apis.drive.v3 import DriveResource
-from googleapiclient._apis.drive.v3.schemas import File, Permission, FileList
 
 from .factory import GoogleServiceFactory, default_google_service_factory
+
+if TYPE_CHECKING:
+    from io import BytesIO
+    from pathlib import Path
+
+    from googleapiclient._apis.drive.v3 import DriveResource
+    from googleapiclient._apis.drive.v3.schemas import (
+        File,
+        FileList,
+        Permission,
+    )
 
 
 class DriveHelper:
     # https://github.com/googleworkspace/python-samples/tree/main/drive/snippets/drive-v3
-    def __init__(self, factory: GoogleServiceFactory):
+    def __init__(self, factory: GoogleServiceFactory) -> None:
         self.factory = factory
         self.logger = logging.getLogger(
-            f"{__name__}.{self.__class__.__name__}"
+            f"{__name__}.{self.__class__.__name__}",
         )
 
     @cached_property
     def service(self) -> DriveResource:
-        return self.factory.get_drive_service()
+        return self.factory.drive
 
     def grant_permissions(
         self,
@@ -52,15 +60,16 @@ class DriveHelper:
         self,
         folder_id: str,
         fields: str,
-        pageSize: int = 100,
+        page_size: int = 100,
     ) -> FileList:
-        """
+        """List file in a folder.
+
         https://developers.google.com/drive/api/reference/rest/v3/files/list
         """
         return (
             self.service.files()
             .list(
-                pageSize=pageSize,
+                pageSize=page_size,
                 q=f"'{folder_id}' in parents",
                 fields=fields,
             )
@@ -82,13 +91,15 @@ class DriveHelper:
         while not done:
             status, done = downloader.next_chunk()
             self.logger.debug(
-                f"Downloading... ({self.to_percent(status.progress())})"
+                "Downloading (%s)",
+                self.to_percent(status.progress()),
             )
 
     def upload_file_to_folder(
         self,
         filepath: Path,
         folder_id: str,
+        *,
         resumable: bool = False,
     ) -> File:
         metadata: File = {

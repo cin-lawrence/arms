@@ -15,11 +15,11 @@ class Error(BaseModel):
     detail: str | None = None
 
 
-class ErrorResponse(Error):
+class ResponseError(Error):
     errors: list[Error]
 
     @classmethod
-    def try_validate_json(cls, text: str) -> Union["ErrorResponse", str]:
+    def try_validate_json(cls, text: str) -> Union["ResponseError", str]:
         try:
             return cls.model_validate_json(text)
         except ValidationError:

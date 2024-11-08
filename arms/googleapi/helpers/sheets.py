@@ -1,19 +1,20 @@
 import re
 import string
 from functools import cached_property
-from typing import Literal, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, cast
 
 from googleapiclient._apis.sheets.v4.schemas import (
     BatchGetValuesResponse,
     BatchUpdateSpreadsheetResponse,
     ClearValuesResponse,
+    GridRange,
+    Sheet,
     Spreadsheet,
     SpreadsheetProperties,
     UpdateValuesResponse,
     ValueRange,
-    GridRange,
-    Sheet,
 )
+
 from .factory import GoogleServiceFactory, default_google_service_factory
 
 if TYPE_CHECKING:
@@ -34,12 +35,12 @@ def col2num(col: str) -> int:
 
 class SpreadsheetsHelper:
     # https://github.com/googleworkspace/python-samples/tree/main/sheets/snippets
-    def __init__(self, factory: GoogleServiceFactory):
+    def __init__(self, factory: GoogleServiceFactory) -> None:
         self.factory = factory
 
     @cached_property
     def service(self) -> "SheetsResource.SpreadsheetsResource":
-        return self.factory.get_spreadsheet_service()
+        return self.factory.spreadsheets
 
     def _a1notation_to_gridrange(
         self,
@@ -61,7 +62,7 @@ class SpreadsheetsHelper:
         sheet_id = 0
 
         spreadsheet: Spreadsheet = self.service.get(
-            spreadsheetId=spreadsheet_id
+            spreadsheetId=spreadsheet_id,
         ).execute()
         if sheet_title:
             sheets = filter(
@@ -87,7 +88,8 @@ class SpreadsheetsHelper:
         }
 
         return cast(
-            GridRange, {k: v for k, v in gridrange.items() if v is not None}
+            GridRange,
+            {k: v for k, v in gridrange.items() if v is not None},
         )
 
     def create_sheet(
@@ -127,17 +129,19 @@ class SpreadsheetsHelper:
     def update_values_in_range(
         self,
         sheet_id: str,
-        range: str,
+        range_: str,
         body: ValueRange,
         value_input_option: Literal[
-            "INPUT_VALUE_OPTION_UNSPECIFIED", "RAW", "USER_ENTERED"
+            "INPUT_VALUE_OPTION_UNSPECIFIED",
+            "RAW",
+            "USER_ENTERED",
         ] = "USER_ENTERED",
     ) -> UpdateValuesResponse:
         return (
             self.service.values()
             .update(
                 spreadsheetId=sheet_id,
-                range=range,  # the A1 notation
+                range=range_,  # the A1 notation
                 valueInputOption=value_input_option,
                 body=body,
             )
@@ -147,10 +151,10 @@ class SpreadsheetsHelper:
     def update_currency_format(
         self,
         sheet_id: str,
-        range: str | GridRange,
+        range_: str | GridRange,
     ) -> BatchUpdateSpreadsheetResponse:
-        if isinstance(range, str):
-            range = self._a1notation_to_gridrange(sheet_id, range)
+        if isinstance(range_, str):
+            range_ = self._a1notation_to_gridrange(sheet_id, range_)
 
         return self.service.batchUpdate(
             spreadsheetId=sheet_id,
@@ -158,32 +162,32 @@ class SpreadsheetsHelper:
                 "requests": [
                     {
                         "repeatCell": {
-                            "range": range,
+                            "range": range_,
                             "cell": {
                                 "userEnteredFormat": {
                                     "numberFormat": {
                                         "type": "CURRENCY",
                                         "pattern": "#,##0.00",
-                                    }
-                                }
+                                    },
+                                },
                             },
                             "fields": "userEnteredFormat.numberFormat",
-                        }
-                    }
-                ]
+                        },
+                    },
+                ],
             },
         ).execute()
 
     def clear_values(
         self,
         sheet_id: str,
-        range: str = _DefaultA1NotationAll,
+        range_: str = _DefaultA1NotationAll,
     ) -> ClearValuesResponse:
         return (
             self.service.values()
             .clear(
                 spreadsheetId=sheet_id,
-                range=range,
+                range=range_,
                 body={},
             )
             .execute()

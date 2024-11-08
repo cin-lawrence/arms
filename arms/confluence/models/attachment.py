@@ -32,7 +32,7 @@ class Version(BaseUnit[VersionExpandable]):
             Field(
                 description=(
                     "will present if `comment` is present in attachment create"
-                )
+                ),
             ),
         ]
         | None
@@ -81,7 +81,7 @@ class AttachmentExtensions(BaseModel):
             Field(
                 description=(
                     "will present if `comment` is present in attachment create"
-                )
+                ),
             ),
         ]
         | None

@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import Final
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class BasicAuthCredentials(BaseSettings):
+    MIN_LINES: Final[int] = 2
     model_config = SettingsConfigDict(
         case_sensitive=False,
         env_prefix="basicauth_",
@@ -17,9 +19,9 @@ class BasicAuthCredentials(BaseSettings):
         path = Path(path)
         if not path.exists():
             raise ValueError(f"file not found at {path}")
-        with open(path) as readfile:
+        with path.open() as readfile:
             lines = readfile.readlines()
-        if len(lines) < 2:
+        if len(lines) < cls.MIN_LINES:
             raise ValueError("invalid credentials for basic auth")
         username = lines[0].strip()
         password = lines[1].strip()

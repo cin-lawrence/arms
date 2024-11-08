@@ -13,16 +13,16 @@ class MyEncoder(json.JSONEncoder):
     def default(self, o: Any) -> str:
         if isinstance(o, Path):
             return str(o)
-        elif isinstance(o, datetime):
+        if isinstance(o, datetime):
             return f"{o.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}Z"
-        elif isinstance(o, UUID):
+        if isinstance(o, UUID):
             return str(o)
 
         return super().default(o)
 
 
 def jsondump(obj: Any, path: Path | str, indent: int = 4) -> None:
-    with open(path, "w+") as writefile:
+    with Path(path).open("w+") as writefile:
         return json.dump(
             obj,
             writefile,

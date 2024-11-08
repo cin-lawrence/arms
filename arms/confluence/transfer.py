@@ -9,7 +9,7 @@ from aiofiles.tempfile import TemporaryDirectory
 from .api import ConfluenceToolkit
 from .exc import ClientError
 from .models.ancestor import Ancestor, AncestorType
-from .models.errors import ErrorCode, ErrorResponse
+from .models.errors import ErrorCode, ResponseError
 from .models.page import (
     GetPageParams,
     PageBodyAtlas,
@@ -39,7 +39,7 @@ class TransferHelper:
         self,
         src_toolkit: ConfluenceToolkit,
         dst_toolkit: ConfluenceToolkit,
-    ):
+    ) -> None:
         self.st = src_toolkit
         self.dt = dst_toolkit
 
@@ -74,9 +74,10 @@ class TransferHelper:
                 title=title,
                 parentId=parent_id,
                 body=PageBodyStorageRef(
-                    representation=PageBodyFormat.Storage, value=""
+                    representation=PageBodyFormat.Storage,
+                    value="",
                 ),
-            )
+            ),
         )
 
         new_content = src_content
@@ -113,13 +114,13 @@ class TransferHelper:
                 body=PageBodyAtlasRef.model_validate(
                     {
                         "value": jsondumps(new_content),
-                    }
+                    },
                 ),
                 version=PageUpdateVersion.model_validate(
                     {
                         "number": page_created.version.number + 1,
                         "message": self.Comment,
-                    }
+                    },
                 ),
             ),
         )
@@ -132,8 +133,12 @@ class TransferHelper:
     ) -> str:
         current_parent_id: str = parent_id
         for ancestor in ancestors:
-            logging.warning(f"creating {ancestor.id} in {current_parent_id}")
-            if not ancestor.type == AncestorType.Page:
+            logging.warning(
+                "Creating %s in %s",
+                ancestor.id,
+                current_parent_id,
+            )
+            if ancestor.type != AncestorType.Page:
                 continue
             src_page = await self.st.get_page(ancestor.id)
             try:
@@ -144,11 +149,11 @@ class TransferHelper:
                         title=src_page.title,
                         parentId=current_parent_id,
                         body=PageBodyStorageRef(value=""),
-                    )
+                    ),
                 )
             except ClientError as err:
                 if not (
-                    isinstance(err.payload, ErrorResponse)
+                    isinstance(err.payload, ResponseError)
                     and err.payload.code == ErrorCode.InvalidRequestParameter
                     and "already exists" in err.payload.title
                 ):
@@ -157,13 +162,13 @@ class TransferHelper:
 
             if dst_page is None:
                 response = await self.dt.get_pages(
-                    GetPageParams(title=src_page.title)
+                    GetPageParams(title=src_page.title),
                 )
                 dst_page = response.first
 
             if dst_page is None:
                 raise RuntimeError(
-                    "couldn't either create or get page {src_page.title}"
+                    "Couldn't either create or get page {src_page.title}",
                 )
 
             current_parent_id = str(dst_page.id)
@@ -175,6 +180,7 @@ class TransferHelper:
         space_id: str,
         parent_id: str,
         title: str | None = None,
+        *,
         transfer_ancestors: bool = False,
     ) -> None:
         if transfer_ancestors:
