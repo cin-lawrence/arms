@@ -1,11 +1,10 @@
 import logging
+from collections.abc import Callable
 from copy import deepcopy
 from typing import (
     Annotated,
     Any,
-    Callable,
     Final,
-    TypeAlias,
     TypedDict,
     TypeVar,
 )
@@ -14,7 +13,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 from pydantic.functional_validators import BeforeValidator
 
-Attrs: TypeAlias = dict[str, UUID | int | str]
+type Attrs = dict[str, UUID | int | str]
 logger = logging.getLogger(__name__)
 
 
@@ -63,7 +62,7 @@ class Image(BaseModel):
     type: str
 
 
-TransformMapper: TypeAlias = dict[str, Callable[[Any], Any]]
+type TransformMapper = dict[str, Callable[[Any], Any]]
 DictOrList = TypeVar("DictOrList", dict[str, Any], list[Any])
 
 
@@ -117,7 +116,7 @@ def patch(
     level: int = 0,
     path: str = "#root",
 ) -> DictOrList:
-    if not isinstance(obj, (list, dict)):
+    if not isinstance(obj, list | dict):
         logger.debug("[Level@%d | %s]: %s", level, path, obj)
         return None
 

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
         UpdateValuesResponse,
     )
 
-    from ..types import SheetsData
+    from ..typedefs import SheetsData
 
 _DefaultA1Notation = "A1"
 _DefaultA1NotationAll = "A1:ZZ"

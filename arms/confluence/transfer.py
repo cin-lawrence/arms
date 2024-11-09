@@ -23,7 +23,7 @@ from .models.page import (
     PageUpdateVersion,
 )
 from .patcher import PatchMappingValue, patch
-from .types import PageId
+from .typedefs import PageId
 from .utils import jsondumps
 
 
@@ -98,7 +98,11 @@ class TransferHelper:
                     "image_id": str(att_resp.first.extensions.fileId),
                     "collection": att_resp.first.extensions.collectionName,
                 }
-                for att_req, att_resp in zip(src_attachments, responses)
+                for att_req, att_resp in zip(
+                    src_attachments,
+                    responses,
+                    strict=False,
+                )
                 if att_req.extensions and att_resp.first
             }
 

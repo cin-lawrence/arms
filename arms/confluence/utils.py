@@ -1,8 +1,9 @@
 import asyncio
 import json
+from collections.abc import Coroutine
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Coroutine
+from typing import Any
 from uuid import UUID
 
 from bs4 import BeautifulSoup
