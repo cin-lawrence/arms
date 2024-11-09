@@ -1,9 +1,10 @@
+from collections.abc import Callable
 from pathlib import Path
-from typing import Annotated, Any, Callable, Generic, TypeAlias, TypeVar
+from typing import Annotated, Any, Generic, TypeVar
 
 from pydantic import AnyHttpUrl, BaseModel, Field, model_serializer
 
-Link: TypeAlias = AnyHttpUrl | Path | str
+type Link = AnyHttpUrl | Path | str
 ExpandableType = TypeVar("ExpandableType", bound=BaseModel)
 ResourceType = TypeVar("ResourceType", bound=BaseModel)
 
