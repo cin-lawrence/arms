@@ -5,22 +5,21 @@ import string
 from functools import cached_property
 from typing import TYPE_CHECKING, Literal, cast
 
-from googleapiclient._apis.sheets.v4.schemas import (
-    BatchGetValuesResponse,
-    BatchUpdateSpreadsheetResponse,
-    ClearValuesResponse,
-    GridRange,
-    Sheet,
-    Spreadsheet,
-    SpreadsheetProperties,
-    UpdateValuesResponse,
-    ValueRange,
-)
-
 from .factory import GoogleServiceFactory, default_google_service_factory
 
 if TYPE_CHECKING:
     from googleapiclient._apis.sheets.v4.resources import SheetsResource
+    from googleapiclient._apis.sheets.v4.schemas import (
+        BatchGetValuesResponse,
+        BatchUpdateSpreadsheetResponse,
+        ClearValuesResponse,
+        GridRange,
+        Sheet,
+        Spreadsheet,
+        SpreadsheetProperties,
+        UpdateValuesResponse,
+        ValueRange,
+    )
 
 
 _PatternA1Notation = re.compile(r"^(?:(.+)!)*(\D+)(\d*):(\D+)(\d*)$")
@@ -90,7 +89,7 @@ class SpreadsheetsHelper:
         }
 
         return cast(
-            GridRange,
+            "GridRange",
             {k: v for k, v in gridrange.items() if v is not None},
         )
 
