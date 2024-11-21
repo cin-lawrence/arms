@@ -88,3 +88,5 @@ warn_required_dynamic_aliases = true
 
 [tool.pdm.scripts]
 lint = "ruff check --fix"
+tc = "mypy ."
+pre = "pre-commit run --all-files"

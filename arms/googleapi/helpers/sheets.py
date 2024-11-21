@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import string
 from functools import cached_property
@@ -39,7 +41,7 @@ class SpreadsheetsHelper:
         self.factory = factory
 
     @cached_property
-    def service(self) -> "SheetsResource.SpreadsheetsResource":
+    def service(self) -> SheetsResource.SpreadsheetsResource:
         return self.factory.spreadsheets
 
     def _a1notation_to_gridrange(
