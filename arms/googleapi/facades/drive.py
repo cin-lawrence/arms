@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 import hashlib
 import json
 import logging
 import os
 import shutil
-from collections.abc import Generator, Sequence
 from io import BytesIO
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Annotated,
     Any,
     ClassVar,
@@ -16,11 +18,15 @@ from typing import (
     cast,
 )
 
-from googleapiclient._apis.drive.v3.schemas import File, Permission
 from googleapiclient.errors import HttpError
 
 from ..helpers.drive import DriveHelper, default_drive_helper
 from ..payloads.enums import MimeType
+
+if TYPE_CHECKING:
+    from collections.abc import Generator, Sequence
+
+    from googleapiclient._apis.drive.v3.schemas import File, Permission
 
 
 def md5(filepath: Path) -> str:
